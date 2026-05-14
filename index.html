@@ -6,12 +6,17 @@
     <title>道德經禪意指引 | Tao Oracle</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- ✨ 引入 Google 雲端字體：霞鶩文楷 (LXGW WenKai TC) ✨ -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&display=swap" rel="stylesheet">
+    
     <style>
-        /* ✨ 1. 修復置中溢出問題：加入 padding 保護頂部與底部，取消強制置中 */
-        body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 80px 0 40px 0; box-sizing: border-box; font-family: 'BiauKai', 'Kaiti TC', 'STKaiti', 'DFKai-SB', 'MingLiU', serif; background-color: #2c2c2c; background-size: cover; background-position: center; background-attachment: fixed; transition: background-image 1.5s ease-in-out; position: relative; }
+        /* ✨ 將字體強制設定為雲端的霞鶩文楷 ✨ */
+        body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 80px 0 40px 0; box-sizing: border-box; font-family: 'LXGW WenKai TC', serif; background-color: #2c2c2c; background-size: cover; background-position: center; background-attachment: fixed; transition: background-image 1.5s ease-in-out; position: relative; }
         body::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(3px); z-index: -1; }
         
-        /* ✨ 2. 讓卷軸自動分配空間：使用 margin: auto */
         .scroll-container { width: 85%; max-width: 420px; margin: auto; position: relative; }
         .roller { height: 18px; background: linear-gradient(to bottom, #4e342e, #3e2723, #271410, #4e342e); border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); position: relative; z-index: 2; margin: 0 -12px; }
         
@@ -34,7 +39,6 @@
         .advice-box { background-color: rgba(255, 255, 255, 0.5); border-left: 4px solid #9e2a2b; padding: 15px; text-align: left; font-size: 1.05rem; color: #333; display: none; border-radius: 0 5px 5px 0; line-height: 1.7; white-space: pre-line; opacity: 0; margin-top: 15px; }
         .notice { color: #777; font-size: 0.85rem; margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 15px; }
 
-        /* ✨ 3. 將頂部按鈕改為 Fixed (懸浮鎖定)，並加上最高圖層 z-index: 100 */
         .top-nav { position: fixed; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 100; }
         .nav-btn, .lang-select { background-color: rgba(253, 245, 230, 0.9); border: 1px solid #c8b79e; color: #555; font-family: inherit; font-weight: bold; padding: 6px 12px; border-radius: 4px; cursor: pointer; transition: 0.3s; outline: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .nav-btn:hover, .lang-select:hover { background-color: #9e2a2b; color: #fdf5e6; border-color: #9e2a2b; }
@@ -102,7 +106,6 @@
         <div class="roller"></div>
     </div>
 
-    <!-- 藏經閣與歷史紀錄彈窗 (略) -->
     <div id="collectionModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeCollection()">&times;</span>
@@ -137,9 +140,7 @@
 
         window.onload = function() {
             updateUI();
-            
             const cachedDB = localStorage.getItem('taoFullDatabase_v1');
-            
             if (cachedDB) {
                 cards = JSON.parse(cachedDB);
                 startApp();
@@ -178,7 +179,6 @@
                     if(tempCards.length > 0) {
                         localStorage.setItem('taoFullDatabase_v1', JSON.stringify(tempCards));
                         cards = tempCards; 
-                        
                         if (isFirstTime) {
                             document.getElementById('loading').style.display = 'none';
                             startApp();
