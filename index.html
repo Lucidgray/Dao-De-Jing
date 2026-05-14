@@ -7,22 +7,24 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'BiauKai', 'Kaiti TC', 'STKaiti', 'DFKai-SB', 'MingLiU', serif; background-color: #2c2c2c; background-size: cover; background-position: center; background-attachment: fixed; transition: background-image 1.5s ease-in-out; position: relative; }
+        /* ✨ 1. 修復置中溢出問題：加入 padding 保護頂部與底部，取消強制置中 */
+        body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 80px 0 40px 0; box-sizing: border-box; font-family: 'BiauKai', 'Kaiti TC', 'STKaiti', 'DFKai-SB', 'MingLiU', serif; background-color: #2c2c2c; background-size: cover; background-position: center; background-attachment: fixed; transition: background-image 1.5s ease-in-out; position: relative; }
         body::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(3px); z-index: -1; }
         
-        .scroll-container { width: 85%; max-width: 420px; margin-top: 20px; position: relative; }
+        /* ✨ 2. 讓卷軸自動分配空間：使用 margin: auto */
+        .scroll-container { width: 85%; max-width: 420px; margin: auto; position: relative; }
         .roller { height: 18px; background: linear-gradient(to bottom, #4e342e, #3e2723, #271410, #4e342e); border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); position: relative; z-index: 2; margin: 0 -12px; }
         
         .paper { background-color: #fdf5e6; background-image: url('https://www.transparenttextures.com/patterns/rice-paper.png'); box-shadow: inset 0 0 30px rgba(139, 69, 19, 0.1), 0 10px 25px rgba(0,0,0,0.3); padding: 0 30px; width: calc(100% - 60px); margin: 0 auto; text-align: center; overflow: hidden; position: relative; }
-        .unroll-animation { animation: unrollPaper 1.5s ease-in-out forwards; } /* 稍微加快一點展開速度 */
-        @keyframes unrollPaper { 0% { max-height: 0; padding-top: 0; padding-bottom: 0; opacity: 0; } 100% { max-height: 1300px; padding-top: 40px; padding-bottom: 40px; opacity: 1; } }
+        .unroll-animation { animation: unrollPaper 1.5s ease-in-out forwards; }
+        @keyframes unrollPaper { 0% { max-height: 0; padding-top: 0; padding-bottom: 0; opacity: 0; } 100% { max-height: 1500px; padding-top: 40px; padding-bottom: 40px; opacity: 1; } }
 
         .content-wrapper { opacity: 0; margin-bottom: 25px; }
         .chapter-text { font-size: 0.95rem; color: #777; margin-bottom: 15px; display: inline-block; border-bottom: 1px solid #c8b79e; padding-bottom: 5px; letter-spacing: 1px; }
         .main-quote { font-size: 1.6rem; color: #2e2e2e; font-weight: bold; line-height: 1.6; letter-spacing: 2px; margin-bottom: 20px; padding: 0 10px; }
         .explanation-text { font-size: 1.05rem; color: #555; line-height: 1.8; text-align: left; background: rgba(139, 69, 19, 0.05); padding: 15px; border-radius: 8px; }
 
-        .fade-in-text { animation: fadeInText 1.2s ease-in-out 0.5s forwards; } /* 配合極速讀取，文字提早浮現 */
+        .fade-in-text { animation: fadeInText 1.2s ease-in-out 0.5s forwards; } 
         @keyframes fadeInText { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
 
         .btn-group { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
@@ -32,16 +34,17 @@
         .advice-box { background-color: rgba(255, 255, 255, 0.5); border-left: 4px solid #9e2a2b; padding: 15px; text-align: left; font-size: 1.05rem; color: #333; display: none; border-radius: 0 5px 5px 0; line-height: 1.7; white-space: pre-line; opacity: 0; margin-top: 15px; }
         .notice { color: #777; font-size: 0.85rem; margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 15px; }
 
-        .top-nav { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 10; }
-        .nav-btn, .lang-select { background-color: rgba(253, 245, 230, 0.8); border: 1px solid #c8b79e; color: #555; font-family: inherit; font-weight: bold; padding: 6px 12px; border-radius: 4px; cursor: pointer; transition: 0.3s; outline: none;}
+        /* ✨ 3. 將頂部按鈕改為 Fixed (懸浮鎖定)，並加上最高圖層 z-index: 100 */
+        .top-nav { position: fixed; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 100; }
+        .nav-btn, .lang-select { background-color: rgba(253, 245, 230, 0.9); border: 1px solid #c8b79e; color: #555; font-family: inherit; font-weight: bold; padding: 6px 12px; border-radius: 4px; cursor: pointer; transition: 0.3s; outline: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .nav-btn:hover, .lang-select:hover { background-color: #9e2a2b; color: #fdf5e6; border-color: #9e2a2b; }
-        .lang-select { position: absolute; top: 20px; left: 20px; }
+        .lang-select { position: fixed; top: 20px; left: 20px; z-index: 100; }
 
         .utility-bar { display: flex; justify-content: center; gap: 15px; margin-top: 25px; opacity: 0; }
         .tool-btn { background: none; border: 1px solid #c8b79e; font-size: 0.8rem; color: #777; font-family: inherit; font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; transition: 0.3s; }
         .tool-btn:hover, .tool-btn.saved { background-color: #9e2a2b; color: #fdf5e6; border-color: #9e2a2b; }
 
-        .modal { display: none; position: fixed; z-index: 20; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); }
+        .modal { display: none; position: fixed; z-index: 200; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); }
         .modal-content { background-color: #fdf5e6; background-image: url('https://www.transparenttextures.com/patterns/rice-paper.png'); margin: 15% auto; padding: 25px; border-radius: 8px; width: 85%; max-width: 420px; max-height: 65vh; overflow-y: auto; border: 2px solid #c8b79e; box-shadow: 0 5px 25px rgba(0,0,0,0.5); font-family: inherit; }
         .close-btn { color: #9e2a2b; float: right; font-size: 32px; font-weight: bold; cursor: pointer; line-height: 0.8; }
         .collection-item { border-bottom: 1px dashed #c8b79e; padding: 15px 0; text-align: left; position: relative;}
@@ -135,23 +138,18 @@
         window.onload = function() {
             updateUI();
             
-            // ✨ 極速優化魔法：先檢查有沒有「快取資料庫」
             const cachedDB = localStorage.getItem('taoFullDatabase_v1');
             
             if (cachedDB) {
-                // 如果有快取，瞬間載入！零延遲！
                 cards = JSON.parse(cachedDB);
                 startApp();
-                // 背景默默去抓最新資料更新，不干擾使用者
                 fetchDataFromCloud(false); 
             } else {
-                // 第一次來，乖乖顯示載入中，並去抓資料
                 document.getElementById('loading').style.display = 'block';
                 fetchDataFromCloud(true);
             }
         };
 
-        // 獨立出抓取資料的模組
         function fetchDataFromCloud(isFirstTime) {
             Papa.parse(csvUrl, {
                 download: true,
@@ -178,9 +176,8 @@
                     });
 
                     if(tempCards.length > 0) {
-                        // 將最新資料存入快取記憶體
                         localStorage.setItem('taoFullDatabase_v1', JSON.stringify(tempCards));
-                        cards = tempCards; // 更新當下記憶體
+                        cards = tempCards; 
                         
                         if (isFirstTime) {
                             document.getElementById('loading').style.display = 'none';
@@ -225,7 +222,6 @@
         }
 
         function renderCard() {
-            // 背景圖加上預載入機制，避免圖片閃爍
             const img = new Image();
             img.src = currentCard.bgImg;
             img.onload = () => { document.body.style.backgroundImage = `url('${currentCard.bgImg}')`; };
@@ -254,15 +250,16 @@
             checkSaveStatus(); 
         }
 
-        // --- 以下為多語系、典藏、歷史與拓印功能，保持不變 ---
         function changeLanguage() {
             currentLang = document.getElementById('lang-select').value;
             localStorage.setItem('taoLang', currentLang); 
             updateUI();
             document.getElementById('card-quote').innerHTML = currentCard.quote[currentLang] || currentCard.quote['zh'];
+            
             const expTitle = `<span style="font-weight:bold; color:#9e2a2b;">【${uiText[currentLang].exp}】</span><br>`;
             const expContent = currentCard.explanation[currentLang] || currentCard.explanation['zh'];
             document.getElementById('card-explanation').innerHTML = expTitle + expContent;
+            
             document.getElementById('advice-box').style.display = 'none';
         }
 
@@ -286,44 +283,79 @@
             const adviceBox = document.getElementById('advice-box');
             adviceBox.classList.remove('fade-in-text');
             void adviceBox.offsetWidth;
+            
             let adviceContent = "";
             if (type === 'work') adviceContent = currentCard.advice.work[currentLang] || currentCard.advice.work['zh'];
             else if (type === 'relationship') adviceContent = currentCard.advice.relationship[currentLang] || currentCard.advice.relationship['zh'];
             else if (type === 'growth') adviceContent = currentCard.advice.growth[currentLang] || currentCard.advice.growth['zh'];
+            
             let adviceTitle = "";
             if (type === 'work') adviceTitle = uiText[currentLang].workGuide;
             else if (type === 'relationship') adviceTitle = uiText[currentLang].relGuide;
             else if (type === 'growth') adviceTitle = uiText[currentLang].growthGuide;
+
             adviceBox.innerHTML = `<span style="font-weight:bold; color:#9e2a2b;">【${adviceTitle}】</span>\n` + adviceContent;
+            
             adviceBox.style.display = 'block';
             adviceBox.classList.add('fade-in-text');
         }
 
         function getCollection() { return JSON.parse(localStorage.getItem('taoCollection')) ||[]; }
+
         function checkSaveStatus() {
             const collection = getCollection();
             const saveBtn = document.getElementById('save-btn');
             const isSaved = collection.some(item => item.id === currentCard.quote['zh']);
-            if (isSaved) { saveBtn.innerText = currentLang === 'zh' ? "✓ 已典藏" : (currentLang === 'en' ? "✓ Saved" : (currentLang === 'ja' ? "✓ 保存済" : "✓ Đã lưu")); saveBtn.classList.add('saved'); } 
-            else { saveBtn.innerText = uiText[currentLang].save; saveBtn.classList.remove('saved'); }
+            if (isSaved) {
+                saveBtn.innerText = currentLang === 'zh' ? "✓ 已典藏" : (currentLang === 'en' ? "✓ Saved" : (currentLang === 'ja' ? "✓ 保存済" : "✓ Đã lưu"));
+                saveBtn.classList.add('saved');
+            } else {
+                saveBtn.innerText = uiText[currentLang].save;
+                saveBtn.classList.remove('saved');
+            }
         }
+
         function toggleSave() {
             let collection = getCollection();
             const isSaved = collection.some(item => item.id === currentCard.quote['zh']);
-            if (isSaved) collection = collection.filter(item => item.id !== currentCard.quote['zh']);
-            else collection.push({ id: currentCard.quote['zh'], chapter: currentCard.chapter, quote: currentCard.quote, explanation: currentCard.explanation });
-            localStorage.setItem('taoCollection', JSON.stringify(collection)); checkSaveStatus();
+            if (isSaved) {
+                collection = collection.filter(item => item.id !== currentCard.quote['zh']);
+            } else {
+                collection.push({ 
+                    id: currentCard.quote['zh'], 
+                    chapter: currentCard.chapter, 
+                    quote: currentCard.quote, 
+                    explanation: currentCard.explanation 
+                });
+            }
+            localStorage.setItem('taoCollection', JSON.stringify(collection));
+            checkSaveStatus();
         }
+
         function openCollection() {
             const modal = document.getElementById('collectionModal');
             const list = document.getElementById('collection-list');
             const collection = getCollection();
             list.innerHTML = '';
-            if (collection.length === 0) list.innerHTML = `<p style="color:#888;">${uiText[currentLang].empty}</p>`;
-            else { collection.forEach((item, index) => { const quoteText = item.quote[currentLang] || item.quote['zh']; const expText = item.explanation[currentLang] || item.explanation['zh']; list.innerHTML += `<div class="collection-item"><div class="collection-chapter">${item.chapter}</div><div class="collection-quote">${quoteText}</div><div style="font-size:0.9rem; color:#666;"><span style="font-weight:bold; color:#9e2a2b;">【${uiText[currentLang].exp}】</span><br>${expText}</div><button class="remove-btn" onclick="removeCollection(${index})">${uiText[currentLang].remove}</button></div>`; }); }
+            if (collection.length === 0) {
+                list.innerHTML = `<p style="color:#888;">${uiText[currentLang].empty}</p>`;
+            } else {
+                collection.forEach((item, index) => {
+                    const quoteText = item.quote[currentLang] || item.quote['zh'];
+                    const expText = item.explanation[currentLang] || item.explanation['zh'];
+                    list.innerHTML += `<div class="collection-item"><div class="collection-chapter">${item.chapter}</div><div class="collection-quote">${quoteText}</div><div style="font-size:0.9rem; color:#666;"><span style="font-weight:bold; color:#9e2a2b;">【${uiText[currentLang].exp}】</span><br>${expText}</div><button class="remove-btn" onclick="removeCollection(${index})">${uiText[currentLang].remove}</button></div>`;
+                });
+            }
             modal.style.display = 'block';
         }
-        function removeCollection(index) { let collection = getCollection(); collection.splice(index, 1); localStorage.setItem('taoCollection', JSON.stringify(collection)); openCollection(); checkSaveStatus(); }
+
+        function removeCollection(index) {
+            let collection = getCollection();
+            collection.splice(index, 1);
+            localStorage.setItem('taoCollection', JSON.stringify(collection));
+            openCollection(); checkSaveStatus(); 
+        }
+
         function closeCollection() { document.getElementById('collectionModal').style.display = 'none'; }
 
         function saveToHistory(date, cardData) {
@@ -333,6 +365,7 @@
             if (history.length > 7) history.pop(); 
             localStorage.setItem('taoHistory_final_v2', JSON.stringify(history));
         }
+
         function openHistory() {
             const modal = document.getElementById('historyModal');
             const list = document.getElementById('history-list');
@@ -342,22 +375,55 @@
             else { history.forEach((item) => { const quoteText = item.quote[currentLang] || item.quote['zh']; list.innerHTML += `<div class="collection-item"><div class="collection-chapter" style="color:#9e2a2b; font-weight:bold; font-size:1rem; margin-bottom:8px;">${item.date}</div><div class="collection-chapter">${item.chapter}</div><div class="collection-quote">${quoteText}</div></div>`; }); }
             modal.style.display = 'block';
         }
+
         function closeHistory() { document.getElementById('historyModal').style.display = 'none'; }
 
         function downloadImage() {
-            const paper = document.getElementById('main-paper'); const watermark = document.getElementById('watermark'); const utilityBar = document.getElementById('utility-bar'); const btnGroup = document.getElementById('btn-group'); const wrapperEl = document.getElementById('quote-wrapper'); const adviceBox = document.getElementById('advice-box');
-            watermark.style.display = 'block'; utilityBar.style.display = 'none'; btnGroup.style.display = 'none';
-            const originalBoxShadow = paper.style.boxShadow; const originalBgImage = paper.style.backgroundImage;
-            paper.style.animation = 'none'; paper.style.opacity = '1'; paper.style.boxShadow = 'none'; paper.style.background = '#fdf5e6'; paper.style.maxHeight = 'none'; paper.style.padding = '40px 30px';
-            wrapperEl.style.animation = 'none'; wrapperEl.style.opacity = '1';
-            if (adviceBox.style.display === 'block') { adviceBox.style.animation = 'none'; adviceBox.style.opacity = '1'; }
+            const paper = document.getElementById('main-paper');
+            const watermark = document.getElementById('watermark');
+            const utilityBar = document.getElementById('utility-bar');
+            const btnGroup = document.getElementById('btn-group');
+            const wrapperEl = document.getElementById('quote-wrapper');
+            const adviceBox = document.getElementById('advice-box');
+            
+            watermark.style.display = 'block';
+            utilityBar.style.display = 'none';
+            btnGroup.style.display = 'none';
+
+            const originalBoxShadow = paper.style.boxShadow;
+            const originalBgImage = paper.style.backgroundImage;
+
+            paper.style.animation = 'none';
+            paper.style.opacity = '1';
+            paper.style.boxShadow = 'none'; 
+            paper.style.background = '#fdf5e6';
+            paper.style.maxHeight = 'none';
+            paper.style.padding = '40px 30px';
+
+            wrapperEl.style.animation = 'none';
+            wrapperEl.style.opacity = '1';
+
+            if (adviceBox.style.display === 'block') {
+                adviceBox.style.animation = 'none';
+                adviceBox.style.opacity = '1';
+            }
 
             setTimeout(() => {
                 html2canvas(paper, { backgroundColor: "#fdf5e6", scale: 2, useCORS: true }).then(canvas => {
-                    const link = document.createElement('a'); link.download = '道德經禪意畫卷.png'; link.href = canvas.toDataURL('image/png'); link.click();
-                    paper.style.animation = ''; paper.style.opacity = ''; paper.style.boxShadow = originalBoxShadow; paper.style.backgroundImage = originalBgImage; paper.style.background = '';
-                    wrapperEl.style.animation = ''; wrapperEl.style.opacity = ''; if (adviceBox.style.display === 'block') { adviceBox.style.animation = ''; adviceBox.style.opacity = ''; }
-                    watermark.style.display = 'none'; utilityBar.style.display = 'flex'; btnGroup.style.display = 'flex'; 
+                    const link = document.createElement('a');
+                    link.download = '道德經禪意畫卷.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    
+                    paper.style.animation = ''; paper.style.opacity = '';
+                    paper.style.boxShadow = originalBoxShadow; paper.style.backgroundImage = originalBgImage;
+                    paper.style.background = '';
+                    wrapperEl.style.animation = ''; wrapperEl.style.opacity = '';
+                    if (adviceBox.style.display === 'block') { adviceBox.style.animation = ''; adviceBox.style.opacity = ''; }
+
+                    watermark.style.display = 'none';
+                    utilityBar.style.display = 'flex';
+                    btnGroup.style.display = 'flex'; 
                 });
             }, 300); 
         }
