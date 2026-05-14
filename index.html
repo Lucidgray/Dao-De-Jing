@@ -7,13 +7,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
-    <!-- ✨ 引入 Google 雲端字體：霞鶩文楷 (LXGW WenKai TC) ✨ -->
+    <!-- 引入 Google 雲端字體：霞鶩文楷 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&display=swap" rel="stylesheet">
     
     <style>
-        /* ✨ 將字體強制設定為雲端的霞鶩文楷 ✨ */
         body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 80px 0 40px 0; box-sizing: border-box; font-family: 'LXGW WenKai TC', serif; background-color: #2c2c2c; background-size: cover; background-position: center; background-attachment: fixed; transition: background-image 1.5s ease-in-out; position: relative; }
         body::before { content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(3px); z-index: -1; }
         
@@ -26,8 +25,32 @@
 
         .content-wrapper { opacity: 0; margin-bottom: 25px; }
         .chapter-text { font-size: 0.95rem; color: #777; margin-bottom: 15px; display: inline-block; border-bottom: 1px solid #c8b79e; padding-bottom: 5px; letter-spacing: 1px; }
-        .main-quote { font-size: 1.6rem; color: #2e2e2e; font-weight: bold; line-height: 1.6; letter-spacing: 2px; margin-bottom: 20px; padding: 0 10px; }
-        .explanation-text { font-size: 1.05rem; color: #555; line-height: 1.8; text-align: left; background: rgba(139, 69, 19, 0.05); padding: 15px; border-radius: 8px; }
+        
+        /* ✨ 經文主體升級：左右對齊 (Justify) ✨ */
+        .main-quote { 
+            font-size: 1.6rem; 
+            color: #2e2e2e; 
+            font-weight: bold; 
+            line-height: 1.6; 
+            letter-spacing: 2px; 
+            margin-bottom: 20px; 
+            padding: 0 10px; 
+            display: block; 
+            text-align: justify; 
+            text-justify: inter-ideograph; 
+        }
+        
+        /* ✨ 釋義升級：左右對齊 (Justify) ✨ */
+        .explanation-text { 
+            font-size: 1.05rem; 
+            color: #555; 
+            line-height: 1.8; 
+            background: rgba(139, 69, 19, 0.05); 
+            padding: 15px; 
+            border-radius: 8px; 
+            text-align: justify; 
+            text-justify: inter-ideograph; 
+        }
 
         .fade-in-text { animation: fadeInText 1.2s ease-in-out 0.5s forwards; } 
         @keyframes fadeInText { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
@@ -36,7 +59,23 @@
         .action-btn { flex: 1; background-color: transparent; border: 2px solid #9e2a2b; padding: 8px 0; border-radius: 4px; color: #9e2a2b; font-size: 1.05rem; font-family: inherit; font-weight: bold; cursor: pointer; transition: all 0.3s; letter-spacing: 2px; }
         .action-btn:hover { background-color: #9e2a2b; color: #fdf5e6; } 
         
-        .advice-box { background-color: rgba(255, 255, 255, 0.5); border-left: 4px solid #9e2a2b; padding: 15px; text-align: left; font-size: 1.05rem; color: #333; display: none; border-radius: 0 5px 5px 0; line-height: 1.7; white-space: pre-line; opacity: 0; margin-top: 15px; }
+        /* ✨ 建議指引升級：左右對齊 (Justify) ✨ */
+        .advice-box { 
+            background-color: rgba(255, 255, 255, 0.5); 
+            border-left: 4px solid #9e2a2b; 
+            padding: 15px; 
+            font-size: 1.05rem; 
+            color: #333; 
+            display: none; 
+            border-radius: 0 5px 5px 0; 
+            line-height: 1.7; 
+            white-space: pre-line; 
+            opacity: 0; 
+            margin-top: 15px; 
+            text-align: justify; 
+            text-justify: inter-ideograph; 
+        }
+        
         .notice { color: #777; font-size: 0.85rem; margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 15px; }
 
         .top-nav { position: fixed; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 100; }
@@ -51,9 +90,12 @@
         .modal { display: none; position: fixed; z-index: 200; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); }
         .modal-content { background-color: #fdf5e6; background-image: url('https://www.transparenttextures.com/patterns/rice-paper.png'); margin: 15% auto; padding: 25px; border-radius: 8px; width: 85%; max-width: 420px; max-height: 65vh; overflow-y: auto; border: 2px solid #c8b79e; box-shadow: 0 5px 25px rgba(0,0,0,0.5); font-family: inherit; }
         .close-btn { color: #9e2a2b; float: right; font-size: 32px; font-weight: bold; cursor: pointer; line-height: 0.8; }
-        .collection-item { border-bottom: 1px dashed #c8b79e; padding: 15px 0; text-align: left; position: relative;}
-        .collection-chapter { font-size: 0.85rem; color: #888; margin-bottom: 5px; padding-right: 60px; }
-        .collection-quote { font-size: 1.1rem; color: #2e2e2e; font-weight: bold; line-height: 1.5; margin-bottom: 10px; }
+        
+        .collection-item { border-bottom: 1px dashed #c8b79e; padding: 15px 0; position: relative;}
+        .collection-chapter { font-size: 0.85rem; color: #888; margin-bottom: 5px; padding-right: 60px; text-align: left; }
+        /* ✨ 藏經閣內文升級：左右對齊 (Justify) ✨ */
+        .collection-quote { font-size: 1.1rem; color: #2e2e2e; font-weight: bold; line-height: 1.5; margin-bottom: 10px; text-align: justify; text-justify: inter-ideograph; }
+        
         .remove-btn { position: absolute; right: 0; top: 15px; font-size: 0.8rem; color: #777; background: none; border: 1px solid #ccc; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-family: inherit; transition: 0.3s; }
         .remove-btn:hover { background-color: #ffeaea; color: #9e2a2b; border-color: #9e2a2b; }
         
@@ -140,7 +182,9 @@
 
         window.onload = function() {
             updateUI();
+            
             const cachedDB = localStorage.getItem('taoFullDatabase_v1');
+            
             if (cachedDB) {
                 cards = JSON.parse(cachedDB);
                 startApp();
@@ -179,6 +223,7 @@
                     if(tempCards.length > 0) {
                         localStorage.setItem('taoFullDatabase_v1', JSON.stringify(tempCards));
                         cards = tempCards; 
+                        
                         if (isFirstTime) {
                             document.getElementById('loading').style.display = 'none';
                             startApp();
@@ -343,7 +388,7 @@
                 collection.forEach((item, index) => {
                     const quoteText = item.quote[currentLang] || item.quote['zh'];
                     const expText = item.explanation[currentLang] || item.explanation['zh'];
-                    list.innerHTML += `<div class="collection-item"><div class="collection-chapter">${item.chapter}</div><div class="collection-quote">${quoteText}</div><div style="font-size:0.9rem; color:#666;"><span style="font-weight:bold; color:#9e2a2b;">【${uiText[currentLang].exp}】</span><br>${expText}</div><button class="remove-btn" onclick="removeCollection(${index})">${uiText[currentLang].remove}</button></div>`;
+                    list.innerHTML += `<div class="collection-item"><div class="collection-chapter">${item.chapter}</div><div class="collection-quote">${quoteText}</div><div style="font-size:0.9rem; color:#666; text-align:justify; text-justify:inter-ideograph;"><span style="font-weight:bold; color:#9e2a2b;">【${uiText[currentLang].exp}】</span><br>${expText}</div><button class="remove-btn" onclick="removeCollection(${index})">${uiText[currentLang].remove}</button></div>`;
                 });
             }
             modal.style.display = 'block';
