@@ -23,6 +23,7 @@
 
         .content-wrapper { opacity: 0; margin-bottom: 25px; }
         .chapter-text { font-size: 0.95rem; color: #777; margin-bottom: 15px; display: inline-block; border-bottom: 1px solid #c8b79e; padding-bottom: 5px; letter-spacing: 1px; }
+        
         .main-quote { font-size: 1.6rem; color: #2e2e2e; font-weight: bold; line-height: 1.6; letter-spacing: 2px; margin-bottom: 20px; padding: 0 10px; display: block; text-align: justify; text-justify: inter-ideograph; }
         .explanation-text { font-size: 1.05rem; color: #555; line-height: 1.8; background: rgba(139, 69, 19, 0.05); padding: 15px; border-radius: 8px; text-align: justify; text-justify: inter-ideograph; }
         .advice-box { background-color: rgba(255, 255, 255, 0.5); border-left: 4px solid #9e2a2b; padding: 15px; font-size: 1.05rem; color: #333; display: none; border-radius: 0 5px 5px 0; line-height: 1.7; white-space: pre-line; opacity: 0; margin-top: 15px; text-align: justify; text-justify: inter-ideograph; }
@@ -31,10 +32,11 @@
         body[data-lang="en"] .main-quote, body[data-lang="vi"] .main-quote,
         body[data-lang="en"] .explanation-text, body[data-lang="vi"] .explanation-text,
         body[data-lang="en"] .advice-box, body[data-lang="vi"] .advice-box,
-        body[data-lang="en"] .collection-quote, body[data-lang="vi"] .collection-quote { text-align: left; word-spacing: normal; }
+        body[data-lang="en"] .collection-quote, body[data-lang="vi"] .collection-quote {
+            text-align: left; word-spacing: normal;
+        }
 
-        /* ✨ 調整了淡入速度，讓等待與呈現更柔和 ✨ */
-        .fade-in-text { animation: fadeInText 1s ease-in-out 0.2s forwards; } 
+        .fade-in-text { animation: fadeInText 1.2s ease-in-out 0.5s forwards; } 
         @keyframes fadeInText { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
 
         .btn-group { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
@@ -55,12 +57,15 @@
         .modal { display: none; position: fixed; z-index: 200; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); }
         .modal-content { background-color: #fdf5e6; background-image: url('https://www.transparenttextures.com/patterns/rice-paper.png'); margin: 15% auto; padding: 25px; border-radius: 8px; width: 85%; max-width: 420px; max-height: 65vh; overflow-y: auto; border: 2px solid #c8b79e; box-shadow: 0 5px 25px rgba(0,0,0,0.5); font-family: inherit; }
         .close-btn { color: #9e2a2b; float: right; font-size: 32px; font-weight: bold; cursor: pointer; line-height: 0.8; }
+        
         .collection-item { border-bottom: 1px dashed #c8b79e; padding: 15px 0; position: relative;}
         .collection-chapter { font-size: 0.85rem; color: #888; margin-bottom: 5px; padding-right: 60px; text-align: left; }
+        
         .remove-btn { position: absolute; right: 0; top: 15px; font-size: 0.8rem; color: #777; background: none; border: 1px solid #ccc; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-family: inherit; transition: 0.3s; }
         .remove-btn:hover { background-color: #ffeaea; color: #9e2a2b; border-color: #9e2a2b; }
         
         #watermark { display: none; font-size: 0.85rem; color: #777; margin-top: 25px; text-align: center; letter-spacing: 2px;}
+        #loading { font-size: 0.9rem; color: #aaa; position: absolute; bottom: 20px; display: none; }
     </style>
 </head>
 <body>
@@ -82,9 +87,8 @@
         
         <div class="paper" id="main-paper">
             <div class="content-wrapper" id="quote-wrapper">
-                <!-- ✨ 初始載入狀態文字 ✨ -->
-                <div class="chapter-text" id="card-chapter">⏳ 靜心等待</div>
-                <div class="main-quote" id="card-quote" style="text-align: center;">正在連結古老智慧中...</div>
+                <div class="chapter-text" id="card-chapter">宇宙連線中...</div>
+                <div class="main-quote" id="card-quote" style="text-align: center;">為您展開古老智慧...</div>
                 <div class="explanation-text" id="card-explanation" style="display:none;"></div>
             </div>
             
@@ -109,7 +113,6 @@
         <div class="roller"></div>
     </div>
 
-    <!-- 藏經閣與歷史紀錄彈窗 -->
     <div id="collectionModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeCollection()">&times;</span>
@@ -127,7 +130,9 @@
     </div>
 
     <script>
-        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTcvvE3xXnkf1yyyISMNel9rrrUoK1yGZcaDZ097iC9Q3-GmzOTfsd0yEyMSP2AJ_3-nZERx8NqkzFR/pub?output=csv";
+        // ✨ 原本的網址，加上了時間戳記強制要求手機不要讀舊檔 ✨
+        const baseCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTcvvE3xXnkf1yyyISMNel9rrrUoK1yGZcaDZ097iC9Q3-GmzOTfsd0yEyMSP2AJ_3-nZERx8NqkzFR/pub?output=csv";
+        const csvUrl = baseCsvUrl + "&t=" + new Date().getTime();
 
         const uiText = {
             zh: { work: "工作", rel: "關係", growth: "成長", history: "🕰️ 觀復", collection: "📜 藏經閣", save: "🔖 典藏經文", download: "🖼️ 拓印畫卷", share: "📤 贈與知音", notice: "古老智慧今日給予你的指引，請靜心體會。", collectionTitle: "我的藏經閣", exp: "釋義", workGuide: "工作指引", relGuide: "關係指引", growthGuide: "成長指引", remove: "移除", empty: "尚無典藏經文，快去尋找觸動你的智慧吧。", historyTitle: "近七日觀復", historyEmpty: "尚無觀復往跡，明日再來抽取新的指引吧。" },
@@ -135,6 +140,17 @@
             ja: { work: "仕事", rel: "関係", growth: "成長", history: "🕰️ 観復", collection: "📜 蔵経閣", save: "🔖 典蔵", download: "🖼️ 拓本", share: "📤 贈る", notice: "古代の知恵が今日あなたに与える導きです。", collectionTitle: "私の蔵経閣", exp: "釈義", workGuide: "仕事の導き", relGuide: "関係の導き", growthGuide: "成長の導き", remove: "削除", empty: "まだ典蔵されていません。心に響く知恵を探しましょう。", historyTitle: "過去7日間の軌跡", historyEmpty: "履歴がありません。明日また引きに来てください。" },
             vi: { work: "Công việc", rel: "Quan hệ", growth: "Phát", history: "🕰️ Lịch sử", collection: "📜 Lưu trữ", save: "🔖 Lưu", download: "🖼️ In", share: "📤 Chia sẻ", notice: "Trí tuệ cổ xưa dành cho bạn hôm nay.", collectionTitle: "Lưu trữ của tôi", exp: "Ý nghĩa", workGuide: "Công việc", relGuide: "Quan hệ", growthGuide: "Phát triển", remove: "Xóa", empty: "Chưa có lưu trữ. Hãy tìm kiếm trí tuệ chạm đến bạn.", historyTitle: "7 ngày qua", historyEmpty: "Chưa có lịch sử. Hãy quay lại vào ngày mai." }
         };
+
+        const defaultCards = [{
+            bgImg: "https://images.unsplash.com/photo-1542228562-3620f4c2c548?q=80&w=1080&auto=format&fit=crop", chapter: "《道德經》 第八章",
+            quote: { zh: "「上善若水。<br>　　水善利萬物而不爭。」", en: "The highest good is like water. It benefits all things and does not compete.", ja: "上善は水のごとし。水はよく万物を利して争わず。", vi: "Thượng thiện nhược thủy. Nước mang lợi cho muôn vật mà không tranh giành." },
+            explanation: { zh: "最高的善意就像水一樣，柔軟、包容。不與萬物爭搶，卻能滋養一切。", en: "The greatest benevolence is like water, soft and inclusive.", ja: "最高の善意は水のように柔らかく包容力があります。", vi: "Lòng tốt cao nhất giống như nước, mềm mại và bao dung." },
+            advice: {
+                work: { zh: "面對僵局，試著像水一樣繞道而行。", en: "Face deadlocks like water bypassing rocks.", ja: "行き詰まったときは、水のように迂回してみてください。", vi: "Đối mặt với bế tắc, hãy thử đi vòng như nước." },
+                relationship: { zh: "在溝通中退一步，不爭論誰對誰錯。", en: "Take a step back in communication.", ja: "コミュニケーションでは一歩引いてください。", vi: "Lùi một bước trong giao tiếp." },
+                growth: { zh: "允許自己適應各種環境的變化。", en: "Allow yourself to adapt to changes.", ja: "環境の変化に適応することを自分に許可してください。", vi: "Cho phép bản thân thích nghi với những thay đổi." }
+            }
+        }];
 
         let cards = [];
         let currentCard = null; 
@@ -144,17 +160,29 @@
             document.body.setAttribute('data-lang', currentLang);
             updateUI();
             
-            // ✨ 一打開網頁，立刻攤開卷軸並顯示載入文字
+            // 一開網頁強制展開卷軸，避免卡住
             const paper = document.getElementById('main-paper');
             const wrapperEl = document.getElementById('quote-wrapper');
             paper.classList.add('unroll-animation');
             wrapperEl.classList.add('fade-in-text');
-            
-            const cachedDB = localStorage.getItem('taoFullDatabase_v6');
-            if (cachedDB && JSON.parse(cachedDB).length > 0) {
-                cards = JSON.parse(cachedDB);
+
+            // 安全讀取記憶體 (加上 try-catch 防護罩)
+            let cachedDB = null;
+            try {
+                cachedDB = localStorage.getItem('taoFullDatabase_db_v2');
+                if (cachedDB) {
+                    cards = JSON.parse(cachedDB);
+                    // 再次確保 cards 裡面真的有東西
+                    if (!Array.isArray(cards) || cards.length === 0) cards = null;
+                }
+            } catch (e) {
+                console.log("記憶體損壞，準備重新抓取");
+                cards = null;
+            }
+
+            if (cards && cards.length > 0) {
                 startApp();
-                backgroundSync(); 
+                backgroundSync(false); 
             } else {
                 fetchDataFromCloud(true);
             }
@@ -186,72 +214,70 @@
                     });
 
                     if(tempCards.length > 0) {
-                        localStorage.setItem('taoFullDatabase_v6', JSON.stringify(tempCards));
+                        try { localStorage.setItem('taoFullDatabase_db_v2', JSON.stringify(tempCards)); } catch(e){}
                         cards = tempCards; 
                         if (isFirstTime) startApp();
                     } else if (isFirstTime) {
-                        showError("抓不到資料，請檢查試算表標題<br>是否與規定一模一樣！");
+                        // 真的抓不到資料，啟用急救包
+                        cards = defaultCards;
+                        startApp();
                     }
                 },
                 error: function(err) {
-                    if (isFirstTime) showError("無法讀取您的資料庫，請確認網路或CSV網址。");
+                    if (isFirstTime) {
+                        cards = defaultCards;
+                        startApp();
+                    }
                 }
             });
         }
 
         function backgroundSync() { fetchDataFromCloud(false); }
 
-        function showError(msg) {
-            const wrapperEl = document.getElementById('quote-wrapper');
-            wrapperEl.classList.remove('fade-in-text');
-            void wrapperEl.offsetWidth;
-            
-            document.getElementById('card-chapter').innerHTML = "⚠️ 連線異常";
-            document.getElementById('card-quote').innerHTML = msg;
-            document.getElementById('card-quote').style.textAlign = "center";
-            
-            wrapperEl.classList.add('fade-in-text');
-        }
-
         function startApp() {
+            // 防呆：確保 cards 裡面有東西
+            if (!cards || cards.length === 0) cards = defaultCards;
+
             const today = new Date().toLocaleDateString('zh-TW');
-            const lastDrawDate = localStorage.getItem('taoLastDrawDate_final_v6');
-            const savedCardString = localStorage.getItem('taoTodayCard_final_v6');
+            const lastDrawDate = localStorage.getItem('taoLastDrawDate_v10');
+            const savedCardString = localStorage.getItem('taoTodayCard_v10');
 
             if (lastDrawDate === today && savedCardString) {
-                currentCard = JSON.parse(savedCardString);
+                try {
+                    currentCard = JSON.parse(savedCardString);
+                } catch(e) {
+                    currentCard = cards[Math.floor(Math.random() * cards.length)];
+                }
             } else {
                 const randomIndex = Math.floor(Math.random() * cards.length);
                 currentCard = cards[randomIndex];
-                localStorage.setItem('taoLastDrawDate_final_v6', today);
-                localStorage.setItem('taoTodayCard_final_v6', JSON.stringify(currentCard));
+                localStorage.setItem('taoLastDrawDate_v10', today);
+                localStorage.setItem('taoTodayCard_v10', JSON.stringify(currentCard));
                 saveToHistory(today, currentCard);
             }
             renderCard();
         }
 
         function renderCard() {
-            const img = new Image();
-            img.src = currentCard.bgImg;
-            img.onload = () => { document.body.style.backgroundImage = `url('${currentCard.bgImg}')`; };
+            if (!currentCard || !currentCard.bgImg) currentCard = defaultCards[0];
+
+            document.body.style.backgroundImage = `url('${currentCard.bgImg}')`;
 
             const wrapperEl = document.getElementById('quote-wrapper');
             const utilityBar = document.getElementById('utility-bar');
             
-            // ✨ 移除舊動畫，強制重新觸發淡入，讓「載入中」優雅變身為「經文」
             wrapperEl.classList.remove('fade-in-text');
             utilityBar.classList.remove('fade-in-text');
             void wrapperEl.offsetWidth; 
             
             document.getElementById('card-chapter').innerHTML = currentCard.chapter;
             document.getElementById('card-quote').innerHTML = currentCard.quote[currentLang] || currentCard.quote['zh'];
-            document.getElementById('card-quote').style.textAlign = ""; // 恢復原本的 CSS 對齊設定
+            document.getElementById('card-quote').style.textAlign = ""; 
             
             const expTitle = `<span style="font-weight:bold; color:#9e2a2b;">【${uiText[currentLang].exp}】</span><br>`;
             const expContent = currentCard.explanation[currentLang] || currentCard.explanation['zh'];
             document.getElementById('card-explanation').innerHTML = expTitle + expContent;
             
-            // 顯示按鈕與隱藏區塊
             document.getElementById('card-explanation').style.display = 'block';
             document.getElementById('btn-group').style.display = 'flex';
             document.getElementById('utility-bar').style.display = 'flex';
@@ -339,16 +365,16 @@
         function closeCollection() { document.getElementById('collectionModal').style.display = 'none'; }
 
         function saveToHistory(date, cardData) {
-            let history = JSON.parse(localStorage.getItem('taoHistory_final_v6')) || [];
+            let history = JSON.parse(localStorage.getItem('taoHistory_final_v3')) || [];
             if (history.length > 0 && history[0].date === date) return; 
             history.unshift({ date: date, chapter: cardData.chapter, quote: cardData.quote });
             if (history.length > 7) history.pop(); 
-            localStorage.setItem('taoHistory_final_v6', JSON.stringify(history));
+            localStorage.setItem('taoHistory_final_v3', JSON.stringify(history));
         }
         function openHistory() {
             const modal = document.getElementById('historyModal');
             const list = document.getElementById('history-list');
-            const history = JSON.parse(localStorage.getItem('taoHistory_final_v6')) || [];
+            const history = JSON.parse(localStorage.getItem('taoHistory_final_v3')) || [];
             list.innerHTML = '';
             if (history.length === 0) list.innerHTML = `<p style="color:#888;">${uiText[currentLang].historyEmpty}</p>`;
             else { history.forEach((item) => { const quoteText = item.quote[currentLang] || item.quote['zh']; list.innerHTML += `<div class="collection-item"><div class="collection-chapter" style="color:#9e2a2b; font-weight:bold; font-size:1rem; margin-bottom:8px;">${item.date}</div><div class="collection-chapter">${item.chapter}</div><div class="collection-quote">${quoteText}</div></div>`; }); }
@@ -364,24 +390,4 @@
             wrapperEl.style.animation = 'none'; wrapperEl.style.opacity = '1';
             if (adviceBox.style.display === 'block') { adviceBox.style.animation = 'none'; adviceBox.style.opacity = '1'; }
 
-            setTimeout(() => {
-                html2canvas(paper, { backgroundColor: "#fdf5e6", scale: 2, useCORS: true }).then(canvas => {
-                    const link = document.createElement('a'); link.download = '道德經禪意畫卷.png'; link.href = canvas.toDataURL('image/png'); link.click();
-                    paper.style.animation = ''; paper.style.opacity = ''; paper.style.boxShadow = originalBoxShadow; paper.style.backgroundImage = originalBgImage; paper.style.background = '';
-                    wrapperEl.style.animation = ''; wrapperEl.style.opacity = ''; if (adviceBox.style.display === 'block') { adviceBox.style.animation = ''; adviceBox.style.opacity = ''; }
-                    watermark.style.display = 'none'; utilityBar.style.display = 'flex'; btnGroup.style.display = 'flex'; 
-                });
-            }, 300); 
-        }
-
-        function shareText() {
-            const rawQuote = currentCard.quote[currentLang] || currentCard.quote['zh'];
-            const cleanQuote = rawQuote.replace(/<br>/g, '\n').replace(/　　/g, '  ');
-            const expText = currentCard.explanation[currentLang] || currentCard.explanation['zh'];
-            const shareData = { title: '道德經禪意指引', text: `${currentCard.chapter}\n\n${cleanQuote}\n\n【${uiText[currentLang].exp}】\n${expText}\n\n— 來自 道德經禪意指引`, };
-            if (navigator.share) navigator.share(shareData).catch(err => console.log('分享取消或失敗', err));
-            else alert("此裝置不支援快速分享，但您可以透過『拓印畫卷』下載圖片傳給朋友！");
-        }
-    </script>
-</body>
-</html>
+            setTimeout(() =
