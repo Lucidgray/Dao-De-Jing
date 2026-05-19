@@ -23,7 +23,6 @@
 
         .content-wrapper { opacity: 0; margin-bottom: 25px; }
         .chapter-text { font-size: 0.95rem; color: #777; margin-bottom: 15px; display: inline-block; border-bottom: 1px solid #c8b79e; padding-bottom: 5px; letter-spacing: 1px; }
-        
         .main-quote { font-size: 1.6rem; color: #2e2e2e; font-weight: bold; line-height: 1.6; letter-spacing: 2px; margin-bottom: 20px; padding: 0 10px; display: block; text-align: justify; text-justify: inter-ideograph; }
         .explanation-text { font-size: 1.05rem; color: #555; line-height: 1.8; background: rgba(139, 69, 19, 0.05); padding: 15px; border-radius: 8px; text-align: justify; text-justify: inter-ideograph; }
         .advice-box { background-color: rgba(255, 255, 255, 0.5); border-left: 4px solid #9e2a2b; padding: 15px; font-size: 1.05rem; color: #333; display: none; border-radius: 0 5px 5px 0; line-height: 1.7; white-space: pre-line; opacity: 0; margin-top: 15px; text-align: justify; text-justify: inter-ideograph; }
@@ -57,16 +56,13 @@
         .modal { display: none; position: fixed; z-index: 200; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); }
         .modal-content { background-color: #fdf5e6; background-image: url('https://www.transparenttextures.com/patterns/rice-paper.png'); margin: 15% auto; padding: 25px; border-radius: 8px; width: 85%; max-width: 420px; max-height: 65vh; overflow-y: auto; border: 2px solid #c8b79e; box-shadow: 0 5px 25px rgba(0,0,0,0.5); font-family: inherit; }
         .close-btn { color: #9e2a2b; float: right; font-size: 32px; font-weight: bold; cursor: pointer; line-height: 0.8; }
-        
-        .collection-item { border-bottom: 1px dashed #c8b79e; padding: 15px 0; position: relative;}
-        .collection-chapter { font-size: 0.85rem; color: #888; margin-bottom: 5px; padding-right: 60px; text-align: left; }
-        
+        .collection-item { border-bottom: 1px dashed #c8b79e; padding: 15px 0; text-align: left; position: relative;}
+        .collection-chapter { font-size: 0.85rem; color: #888; margin-bottom: 5px; padding-right: 60px; }
+        .collection-quote { font-size: 1.1rem; color: #2e2e2e; font-weight: bold; line-height: 1.5; margin-bottom: 10px; }
         .remove-btn { position: absolute; right: 0; top: 15px; font-size: 0.8rem; color: #777; background: none; border: 1px solid #ccc; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-family: inherit; transition: 0.3s; }
         .remove-btn:hover { background-color: #ffeaea; color: #9e2a2b; border-color: #9e2a2b; }
         
         #watermark { display: none; font-size: 0.85rem; color: #777; margin-top: 25px; text-align: center; letter-spacing: 2px;}
-        
-        /* 輕量化的背景同步提示 */
         #sync-toast { position: fixed; bottom: 20px; background: rgba(0,0,0,0.6); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.8rem; z-index: 300; display: none; transition: opacity 0.5s; }
     </style>
 </head>
@@ -134,7 +130,6 @@
     <div id="sync-toast">📡 雲端經文已同步</div>
 
     <script>
-        // ✨ 你的專屬 CSV 網址 ✨
         const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTcvvE3xXnkf1yyyISMNel9rrrUoK1yGZcaDZ097iC9Q3-GmzOTfsd0yEyMSP2AJ_3-nZERx8NqkzFR/pub?output=csv";
 
         const uiText = {
@@ -144,7 +139,6 @@
             vi: { work: "Công việc", rel: "Quan hệ", growth: "Phát", history: "🕰️ Lịch sử", collection: "📜 Lưu trữ", save: "🔖 Lưu", download: "🖼️ In", share: "📤 Chia sẻ", notice: "Trí tuệ cổ xưa dành cho bạn hôm nay.", collectionTitle: "Lưu trữ của tôi", exp: "Ý nghĩa", workGuide: "Công việc", relGuide: "Quan hệ", growthGuide: "Phát triển", remove: "Xóa", empty: "Chưa có lưu trữ. Hãy tìm kiếm trí tuệ chạm đến bạn.", historyTitle: "7 ngày qua", historyEmpty: "Chưa có lịch sử. Hãy quay lại vào ngày mai." }
         };
 
-        // 內建急救包 (當網路極慢且沒快取時，瞬間顯示這張卡墊檔)
         const defaultCards = [{
             bgImg: "https://images.unsplash.com/photo-1542228562-3620f4c2c548?q=80&w=1080&auto=format&fit=crop", chapter: "《道德經》 第八章",
             quote: { zh: "「上善若水。<br>　　水善利萬物而不爭。」", en: "The highest good is like water. It benefits all things and does not compete.", ja: "上善は水のごとし。水はよく万物を利して争わず。", vi: "Thượng thiện nhược thủy. Nước mang lợi cho muôn vật mà không tranh giành." },
@@ -164,24 +158,19 @@
             document.body.setAttribute('data-lang', currentLang);
             updateUI();
             
-            // 讀取快取記憶體 (確保版本號乾淨)
             const cachedDB = localStorage.getItem('taoFullDatabase_v3');
             
             if (cachedDB && JSON.parse(cachedDB).length > 0) {
-                // 有快取：0秒瞬間載入！
                 cards = JSON.parse(cachedDB);
                 startApp();
-                // 背景靜默去 Google 更新資料，使用者不需等待
                 backgroundSync(); 
             } else {
-                // 沒快取：先用急救包瞬間顯示，然後背景去抓資料
                 cards = defaultCards;
                 startApp();
-                backgroundSync(true); // true 代表是第一次，抓完會通知使用者
+                backgroundSync(true); 
             }
         };
 
-        // 核心：背景悄悄去 Google 下載資料
         function backgroundSync(isFirstTime = false) {
             Papa.parse(csvUrl, {
                 download: true,
@@ -208,31 +197,17 @@
                     });
 
                     if(tempCards.length > 0) {
-                        // 更新記憶體，明天抽卡就會用到最新資料
                         localStorage.setItem('taoFullDatabase_v3', JSON.stringify(tempCards));
                         
                         if (isFirstTime) {
-                            // 第一次來的話，跳個小提示告訴他資料庫建置完畢
                             const toast = document.getElementById('sync-toast');
                             toast.style.display = 'block';
                             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.style.display = 'none', 500); }, 3000);
                         }
                     }
                 },
-                error: function(err) {
-                    console.log("背景更新失敗，將繼續使用快取", err);
-                }
+                error: function(err) { console.log("背景更新失敗，將繼續使用快取", err); }
             });
-        }
-
-        // 確保發生錯誤時，卷軸一定會打開
-        function forceUnrollAndShowError(msg) {
-            const paper = document.getElementById('main-paper');
-            const wrapperEl = document.getElementById('quote-wrapper');
-            paper.classList.add('unroll-animation');
-            document.getElementById('card-chapter').innerHTML = "⚠️ 系統提示";
-            document.getElementById('card-quote').innerHTML = msg;
-            wrapperEl.style.opacity = 1; 
         }
 
         function startApp() {
@@ -257,9 +232,8 @@
         }
 
         function renderCard() {
-            const img = new Image();
-            img.src = currentCard.bgImg;
-            img.onload = () => { document.body.style.backgroundImage = `url('${currentCard.bgImg}')`; };
+            // ✨ 直接給予背景圖片，不使用 onload 避免被瀏覽器擋住 ✨
+            document.body.style.backgroundImage = `url('${currentCard.bgImg}')`;
 
             const paper = document.getElementById('main-paper');
             const wrapperEl = document.getElementById('quote-wrapper');
@@ -337,53 +311,30 @@
         }
 
         function getCollection() { return JSON.parse(localStorage.getItem('taoCollection')) ||[]; }
-
         function checkSaveStatus() {
             const collection = getCollection();
             const saveBtn = document.getElementById('save-btn');
             const isSaved = collection.some(item => item.id === currentCard.quote['zh']);
-            if (isSaved) {
-                saveBtn.innerText = currentLang === 'zh' ? "✓ 已典藏" : (currentLang === 'en' ? "✓ Saved" : (currentLang === 'ja' ? "✓ 保存済" : "✓ Đã lưu"));
-                saveBtn.classList.add('saved');
-            } else {
-                saveBtn.innerText = uiText[currentLang].save;
-                saveBtn.classList.remove('saved');
-            }
+            if (isSaved) { saveBtn.innerText = currentLang === 'zh' ? "✓ 已典藏" : (currentLang === 'en' ? "✓ Saved" : (currentLang === 'ja' ? "✓ 保存済" : "✓ Đã lưu")); saveBtn.classList.add('saved'); } 
+            else { saveBtn.innerText = uiText[currentLang].save; saveBtn.classList.remove('saved'); }
         }
-
         function toggleSave() {
             let collection = getCollection();
             const isSaved = collection.some(item => item.id === currentCard.quote['zh']);
-            if (isSaved) {
-                collection = collection.filter(item => item.id !== currentCard.quote['zh']);
-            } else {
-                collection.push({ id: currentCard.quote['zh'], chapter: currentCard.chapter, quote: currentCard.quote, explanation: currentCard.explanation });
-            }
-            localStorage.setItem('taoCollection', JSON.stringify(collection));
-            checkSaveStatus();
+            if (isSaved) collection = collection.filter(item => item.id !== currentCard.quote['zh']);
+            else collection.push({ id: currentCard.quote['zh'], chapter: currentCard.chapter, quote: currentCard.quote, explanation: currentCard.explanation });
+            localStorage.setItem('taoCollection', JSON.stringify(collection)); checkSaveStatus();
         }
-
         function openCollection() {
             const modal = document.getElementById('collectionModal');
             const list = document.getElementById('collection-list');
             const collection = getCollection();
             list.innerHTML = '';
-            if (collection.length === 0) {
-                list.innerHTML = `<p style="color:#888;">${uiText[currentLang].empty}</p>`;
-            } else {
-                collection.forEach((item, index) => {
-                    const quoteText = item.quote[currentLang] || item.quote['zh'];
-                    const expText = item.explanation[currentLang] || item.explanation['zh'];
-                    list.innerHTML += `<div class="collection-item"><div class="collection-chapter">${item.chapter}</div><div class="collection-quote">${quoteText}</div><div class="explanation-text" style="background:none; padding:0;"><span style="font-weight:bold; color:#9e2a2b;">【${uiText[currentLang].exp}】</span><br>${expText}</div><button class="remove-btn" onclick="removeCollection(${index})">${uiText[currentLang].remove}</button></div>`;
-                });
-            }
+            if (collection.length === 0) list.innerHTML = `<p style="color:#888;">${uiText[currentLang].empty}</p>`;
+            else { collection.forEach((item, index) => { const quoteText = item.quote[currentLang] || item.quote['zh']; const expText = item.explanation[currentLang] || item.explanation['zh']; list.innerHTML += `<div class="collection-item"><div class="collection-chapter">${item.chapter}</div><div class="collection-quote">${quoteText}</div><div class="explanation-text" style="background:none; padding:0;"><span style="font-weight:bold; color:#9e2a2b;">【${uiText[currentLang].exp}】</span><br>${expText}</div><button class="remove-btn" onclick="removeCollection(${index})">${uiText[currentLang].remove}</button></div>`; }); }
             modal.style.display = 'block';
         }
-
-        function removeCollection(index) {
-            let collection = getCollection(); collection.splice(index, 1); localStorage.setItem('taoCollection', JSON.stringify(collection)); openCollection(); checkSaveStatus(); 
-        }
-
+        function removeCollection(index) { let collection = getCollection(); collection.splice(index, 1); localStorage.setItem('taoCollection', JSON.stringify(collection)); openCollection(); checkSaveStatus(); }
         function closeCollection() { document.getElementById('collectionModal').style.display = 'none'; }
 
         function saveToHistory(date, cardData) {
@@ -393,7 +344,6 @@
             if (history.length > 7) history.pop(); 
             localStorage.setItem('taoHistory_v3', JSON.stringify(history));
         }
-
         function openHistory() {
             const modal = document.getElementById('historyModal');
             const list = document.getElementById('history-list');
@@ -403,7 +353,6 @@
             else { history.forEach((item) => { const quoteText = item.quote[currentLang] || item.quote['zh']; list.innerHTML += `<div class="collection-item"><div class="collection-chapter" style="color:#9e2a2b; font-weight:bold; font-size:1rem; margin-bottom:8px;">${item.date}</div><div class="collection-chapter">${item.chapter}</div><div class="collection-quote">${quoteText}</div></div>`; }); }
             modal.style.display = 'block';
         }
-
         function closeHistory() { document.getElementById('historyModal').style.display = 'none'; }
 
         function downloadImage() {
