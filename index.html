@@ -31,9 +31,7 @@
         body[data-lang="en"] .main-quote, body[data-lang="vi"] .main-quote,
         body[data-lang="en"] .explanation-text, body[data-lang="vi"] .explanation-text,
         body[data-lang="en"] .advice-box, body[data-lang="vi"] .advice-box,
-        body[data-lang="en"] .collection-quote, body[data-lang="vi"] .collection-quote {
-            text-align: left; word-spacing: normal;
-        }
+        body[data-lang="en"] .collection-quote, body[data-lang="vi"] .collection-quote { text-align: left; word-spacing: normal; }
 
         .fade-in-text { animation: fadeInText 1.2s ease-in-out 0.5s forwards; } 
         @keyframes fadeInText { 0% { opacity: 0; transform: translateY(10px); } 100% { opacity: 1; transform: translateY(0); } }
@@ -56,13 +54,13 @@
         .modal { display: none; position: fixed; z-index: 200; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); }
         .modal-content { background-color: #fdf5e6; background-image: url('https://www.transparenttextures.com/patterns/rice-paper.png'); margin: 15% auto; padding: 25px; border-radius: 8px; width: 85%; max-width: 420px; max-height: 65vh; overflow-y: auto; border: 2px solid #c8b79e; box-shadow: 0 5px 25px rgba(0,0,0,0.5); font-family: inherit; }
         .close-btn { color: #9e2a2b; float: right; font-size: 32px; font-weight: bold; cursor: pointer; line-height: 0.8; }
-        .collection-item { border-bottom: 1px dashed #c8b79e; padding: 15px 0; text-align: left; position: relative;}
-        .collection-chapter { font-size: 0.85rem; color: #888; margin-bottom: 5px; padding-right: 60px; }
-        .collection-quote { font-size: 1.1rem; color: #2e2e2e; font-weight: bold; line-height: 1.5; margin-bottom: 10px; }
+        .collection-item { border-bottom: 1px dashed #c8b79e; padding: 15px 0; position: relative;}
+        .collection-chapter { font-size: 0.85rem; color: #888; margin-bottom: 5px; padding-right: 60px; text-align: left; }
         .remove-btn { position: absolute; right: 0; top: 15px; font-size: 0.8rem; color: #777; background: none; border: 1px solid #ccc; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-family: inherit; transition: 0.3s; }
         .remove-btn:hover { background-color: #ffeaea; color: #9e2a2b; border-color: #9e2a2b; }
         
         #watermark { display: none; font-size: 0.85rem; color: #777; margin-top: 25px; text-align: center; letter-spacing: 2px;}
+        #loading { font-size: 0.9rem; color: #aaa; position: absolute; bottom: 20px; display: none; }
         #sync-toast { position: fixed; bottom: 20px; background: rgba(0,0,0,0.6); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.8rem; z-index: 300; display: none; transition: opacity 0.5s; }
     </style>
 </head>
@@ -127,9 +125,11 @@
         </div>
     </div>
     
+    <div id="loading">📡 資料庫同步中...</div>
     <div id="sync-toast">📡 雲端經文已同步</div>
 
     <script>
+        // 你的真實雲端資料庫
         const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTcvvE3xXnkf1yyyISMNel9rrrUoK1yGZcaDZ097iC9Q3-GmzOTfsd0yEyMSP2AJ_3-nZERx8NqkzFR/pub?output=csv";
 
         const uiText = {
@@ -140,14 +140,7 @@
         };
 
         const defaultCards = [{
-            bgImg: "https://images.unsplash.com/photo-1542228562-3620f4c2c548?q=80&w=1080&auto=format&fit=crop", chapter: "《道德經》 第八章",
-            quote: { zh: "「上善若水。<br>　　水善利萬物而不爭。」", en: "The highest good is like water. It benefits all things and does not compete.", ja: "上善は水のごとし。水はよく万物を利して争わず。", vi: "Thượng thiện nhược thủy. Nước mang lợi cho muôn vật mà không tranh giành." },
-            explanation: { zh: "最高的善意就像水一樣，柔軟、包容。不與萬物爭搶，卻能滋養一切。", en: "The greatest benevolence is like water, soft and inclusive.", ja: "最高の善意は水のように柔らかく包容力があります。", vi: "Lòng tốt cao nhất giống như nước, mềm mại và bao dung." },
-            advice: {
-                work: { zh: "面對僵局，試著像水一樣繞道而行。", en: "Face deadlocks like water bypassing rocks.", ja: "行き詰まったときは、水のように迂回してみてください。", vi: "Đối mặt với bế tắc, hãy thử đi vòng như nước." },
-                relationship: { zh: "在溝通中退一步，不爭論誰對誰錯。", en: "Take a step back in communication.", ja: "コミュニケーションでは一歩引いてください。", vi: "Lùi một bước trong giao tiếp." },
-                growth: { zh: "允許自己適應各種環境的變化。", en: "Allow yourself to adapt to changes.", ja: "環境の変化に適応することを自分に許可してください。", vi: "Cho phép bản thân thích nghi với những thay đổi." }
-            }
+            bgImg: "https://images.unsplash.com/photo-1542228562-3620f4c2c548?q=80&w=1080&auto=format&fit=crop", chapter: "《道德經》 第八章", quote: { zh: "「上善若水。<br>　　水善利萬物而不爭。」", en: "The highest good is like water.", ja: "上善は水のごとし。", vi: "Thượng thiện nhược thủy." }, explanation: { zh: "最高的善意就像水一樣，柔軟、包容。不與萬物爭搶，卻能滋養一切。", en: "The greatest benevolence is like water.", ja: "最高の善意は水のように柔らかく包容力があります。", vi: "Lòng tốt cao nhất giống như nước." }, advice: { work: { zh: "面對僵局，試著像水一樣繞道而行。", en: "Face deadlocks like water.", ja: "水のように迂回してみてください。", vi: "Đối mặt với bế tắc như nước." }, relationship: { zh: "在溝通中退一步，不爭論誰對誰錯。", en: "Take a step back.", ja: "一歩引いてください。", vi: "Lùi một bước." }, growth: { zh: "允許自己適應各種環境的變化。", en: "Allow yourself to adapt.", ja: "適応することを自分に許可してください。", vi: "Thích nghi với những thay đổi." } }
         }];
 
         let cards = [];
@@ -158,20 +151,21 @@
             document.body.setAttribute('data-lang', currentLang);
             updateUI();
             
-            const cachedDB = localStorage.getItem('taoFullDatabase_v3');
+            // 更換資料庫快取名稱，強制重新抓取
+            const cachedDB = localStorage.getItem('taoFullDatabase_v2');
             
             if (cachedDB && JSON.parse(cachedDB).length > 0) {
                 cards = JSON.parse(cachedDB);
                 startApp();
                 backgroundSync(); 
             } else {
-                cards = defaultCards;
-                startApp();
-                backgroundSync(true); 
+                document.getElementById('loading').style.display = 'block';
+                // 第一次造訪，強制等待雲端資料下載，絕不使用預設卡片！
+                fetchDataFromCloud(true); 
             }
         };
 
-        function backgroundSync(isFirstTime = false) {
+        function fetchDataFromCloud(isFirstTime) {
             Papa.parse(csvUrl, {
                 download: true,
                 header: true, 
@@ -197,17 +191,39 @@
                     });
 
                     if(tempCards.length > 0) {
-                        localStorage.setItem('taoFullDatabase_v3', JSON.stringify(tempCards));
-                        
+                        localStorage.setItem('taoFullDatabase_v2', JSON.stringify(tempCards));
+                        cards = tempCards; 
                         if (isFirstTime) {
-                            const toast = document.getElementById('sync-toast');
-                            toast.style.display = 'block';
-                            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.style.display = 'none', 500); }, 3000);
+                            document.getElementById('loading').style.display = 'none';
+                            startApp();
                         }
+                    } else if (isFirstTime) {
+                        // 真的抓不到資料才用急救包
+                        cards = defaultCards;
+                        startApp();
+                        showError("抓不到試算表資料，請檢查標題是否一致。");
                     }
                 },
-                error: function(err) { console.log("背景更新失敗，將繼續使用快取", err); }
+                error: function(err) {
+                    if (isFirstTime) {
+                        cards = defaultCards;
+                        startApp();
+                        showError("無法連線到資料庫，請檢查網路。");
+                    }
+                }
             });
+        }
+
+        function backgroundSync() {
+            fetchDataFromCloud(false);
+        }
+
+        function showError(msg) {
+            const toast = document.getElementById('sync-toast');
+            toast.innerText = msg;
+            toast.style.backgroundColor = "rgba(158, 42, 43, 0.8)";
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.style.display = 'none', 500); }, 4000);
         }
 
         function startApp() {
@@ -216,23 +232,24 @@
             document.getElementById('notice-text').style.display = 'block';
 
             const today = new Date().toLocaleDateString('zh-TW');
-            const lastDrawDate = localStorage.getItem('taoLastDrawDate_v4');
-            const savedCardString = localStorage.getItem('taoTodayCard_v4');
+            // 升級版本號 _v5，強制洗掉那張卡住的「上善若水」
+            const lastDrawDate = localStorage.getItem('taoLastDrawDate_v5');
+            const savedCardString = localStorage.getItem('taoTodayCard_v5');
 
             if (lastDrawDate === today && savedCardString) {
                 currentCard = JSON.parse(savedCardString);
             } else {
                 const randomIndex = Math.floor(Math.random() * cards.length);
                 currentCard = cards[randomIndex];
-                localStorage.setItem('taoLastDrawDate_v4', today);
-                localStorage.setItem('taoTodayCard_v4', JSON.stringify(currentCard));
+                localStorage.setItem('taoLastDrawDate_v5', today);
+                localStorage.setItem('taoTodayCard_v5', JSON.stringify(currentCard));
                 saveToHistory(today, currentCard);
             }
             renderCard();
         }
 
         function renderCard() {
-            // ✨ 直接給予背景圖片，不使用 onload 避免被瀏覽器擋住 ✨
+            // ✨ 直接更換背景圖，拔掉 onload 防止手機黑屏 ✨
             document.body.style.backgroundImage = `url('${currentCard.bgImg}')`;
 
             const paper = document.getElementById('main-paper');
@@ -338,16 +355,16 @@
         function closeCollection() { document.getElementById('collectionModal').style.display = 'none'; }
 
         function saveToHistory(date, cardData) {
-            let history = JSON.parse(localStorage.getItem('taoHistory_v3')) || [];
+            let history = JSON.parse(localStorage.getItem('taoHistory_v4')) || [];
             if (history.length > 0 && history[0].date === date) return; 
             history.unshift({ date: date, chapter: cardData.chapter, quote: cardData.quote });
             if (history.length > 7) history.pop(); 
-            localStorage.setItem('taoHistory_v3', JSON.stringify(history));
+            localStorage.setItem('taoHistory_v4', JSON.stringify(history));
         }
         function openHistory() {
             const modal = document.getElementById('historyModal');
             const list = document.getElementById('history-list');
-            const history = JSON.parse(localStorage.getItem('taoHistory_v3')) || [];
+            const history = JSON.parse(localStorage.getItem('taoHistory_v4')) || [];
             list.innerHTML = '';
             if (history.length === 0) list.innerHTML = `<p style="color:#888;">${uiText[currentLang].historyEmpty}</p>`;
             else { history.forEach((item) => { const quoteText = item.quote[currentLang] || item.quote['zh']; list.innerHTML += `<div class="collection-item"><div class="collection-chapter" style="color:#9e2a2b; font-weight:bold; font-size:1rem; margin-bottom:8px;">${item.date}</div><div class="collection-chapter">${item.chapter}</div><div class="collection-quote">${quoteText}</div></div>`; }); }
@@ -377,10 +394,4 @@
             const rawQuote = currentCard.quote[currentLang] || currentCard.quote['zh'];
             const cleanQuote = rawQuote.replace(/<br>/g, '\n').replace(/　　/g, '  ');
             const expText = currentCard.explanation[currentLang] || currentCard.explanation['zh'];
-            const shareData = { title: '道德經禪意指引', text: `${currentCard.chapter}\n\n${cleanQuote}\n\n【${uiText[currentLang].exp}】\n${expText}\n\n— 來自 道德經禪意指引`, };
-            if (navigator.share) navigator.share(shareData).catch(err => console.log('分享取消或失敗', err));
-            else alert("此裝置不支援快速分享，但您可以透過『拓印畫卷』下載圖片傳給朋友！");
-        }
-    </script>
-</body>
-</html>
+            con
