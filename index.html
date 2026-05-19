@@ -6,8 +6,6 @@
     <title>道德經禪意指引 | Tao Oracle</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
-    <!-- 引入 Google 雲端字體：霞鶩文楷 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&display=swap" rel="stylesheet">
@@ -26,19 +24,16 @@
         .content-wrapper { opacity: 0; margin-bottom: 25px; }
         .chapter-text { font-size: 0.95rem; color: #777; margin-bottom: 15px; display: inline-block; border-bottom: 1px solid #c8b79e; padding-bottom: 5px; letter-spacing: 1px; }
         
-        /* 預設中文/日文的左右對齊 */
         .main-quote { font-size: 1.6rem; color: #2e2e2e; font-weight: bold; line-height: 1.6; letter-spacing: 2px; margin-bottom: 20px; padding: 0 10px; display: block; text-align: justify; text-justify: inter-ideograph; }
         .explanation-text { font-size: 1.05rem; color: #555; line-height: 1.8; background: rgba(139, 69, 19, 0.05); padding: 15px; border-radius: 8px; text-align: justify; text-justify: inter-ideograph; }
         .advice-box { background-color: rgba(255, 255, 255, 0.5); border-left: 4px solid #9e2a2b; padding: 15px; font-size: 1.05rem; color: #333; display: none; border-radius: 0 5px 5px 0; line-height: 1.7; white-space: pre-line; opacity: 0; margin-top: 15px; text-align: justify; text-justify: inter-ideograph; }
         .collection-quote { font-size: 1.1rem; color: #2e2e2e; font-weight: bold; line-height: 1.5; margin-bottom: 10px; text-align: justify; text-justify: inter-ideograph; }
 
-        /* ✨ 魔法在此：當語系為英文(en)或越文(vi)時，強制覆蓋為靠左對齊，解決單字間距過大的問題 ✨ */
         body[data-lang="en"] .main-quote, body[data-lang="vi"] .main-quote,
         body[data-lang="en"] .explanation-text, body[data-lang="vi"] .explanation-text,
         body[data-lang="en"] .advice-box, body[data-lang="vi"] .advice-box,
         body[data-lang="en"] .collection-quote, body[data-lang="vi"] .collection-quote {
-            text-align: left;
-            word-spacing: normal;
+            text-align: left; word-spacing: normal;
         }
 
         .fade-in-text { animation: fadeInText 1.2s ease-in-out 0.5s forwards; } 
@@ -70,7 +65,9 @@
         .remove-btn:hover { background-color: #ffeaea; color: #9e2a2b; border-color: #9e2a2b; }
         
         #watermark { display: none; font-size: 0.85rem; color: #777; margin-top: 25px; text-align: center; letter-spacing: 2px;}
-        #loading { font-size: 0.9rem; color: #aaa; position: absolute; bottom: 20px; display: none; }
+        
+        /* 輕量化的背景同步提示 */
+        #sync-toast { position: fixed; bottom: 20px; background: rgba(0,0,0,0.6); color: white; padding: 8px 15px; border-radius: 20px; font-size: 0.8rem; z-index: 300; display: none; transition: opacity 0.5s; }
     </style>
 </head>
 <body>
@@ -92,7 +89,7 @@
         
         <div class="paper" id="main-paper">
             <div class="content-wrapper" id="quote-wrapper">
-                <div class="chapter-text" id="card-chapter">正在連接雲端藏經閣...</div>
+                <div class="chapter-text" id="card-chapter">宇宙連線中...</div>
                 <div class="main-quote" id="card-quote"></div>
                 <div class="explanation-text" id="card-explanation" style="display:none;"></div>
             </div>
@@ -134,9 +131,10 @@
         </div>
     </div>
     
-    <div id="loading">📡 資料庫同步中...</div>
+    <div id="sync-toast">📡 雲端經文已同步</div>
 
     <script>
+        // ✨ 你的專屬 CSV 網址 ✨
         const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTcvvE3xXnkf1yyyISMNel9rrrUoK1yGZcaDZ097iC9Q3-GmzOTfsd0yEyMSP2AJ_3-nZERx8NqkzFR/pub?output=csv";
 
         const uiText = {
@@ -146,27 +144,45 @@
             vi: { work: "Công việc", rel: "Quan hệ", growth: "Phát", history: "🕰️ Lịch sử", collection: "📜 Lưu trữ", save: "🔖 Lưu", download: "🖼️ In", share: "📤 Chia sẻ", notice: "Trí tuệ cổ xưa dành cho bạn hôm nay.", collectionTitle: "Lưu trữ của tôi", exp: "Ý nghĩa", workGuide: "Công việc", relGuide: "Quan hệ", growthGuide: "Phát triển", remove: "Xóa", empty: "Chưa có lưu trữ. Hãy tìm kiếm trí tuệ chạm đến bạn.", historyTitle: "7 ngày qua", historyEmpty: "Chưa có lịch sử. Hãy quay lại vào ngày mai." }
         };
 
+        // 內建急救包 (當網路極慢且沒快取時，瞬間顯示這張卡墊檔)
+        const defaultCards = [{
+            bgImg: "https://images.unsplash.com/photo-1542228562-3620f4c2c548?q=80&w=1080&auto=format&fit=crop", chapter: "《道德經》 第八章",
+            quote: { zh: "「上善若水。<br>　　水善利萬物而不爭。」", en: "The highest good is like water. It benefits all things and does not compete.", ja: "上善は水のごとし。水はよく万物を利して争わず。", vi: "Thượng thiện nhược thủy. Nước mang lợi cho muôn vật mà không tranh giành." },
+            explanation: { zh: "最高的善意就像水一樣，柔軟、包容。不與萬物爭搶，卻能滋養一切。", en: "The greatest benevolence is like water, soft and inclusive.", ja: "最高の善意は水のように柔らかく包容力があります。", vi: "Lòng tốt cao nhất giống như nước, mềm mại và bao dung." },
+            advice: {
+                work: { zh: "面對僵局，試著像水一樣繞道而行。", en: "Face deadlocks like water bypassing rocks.", ja: "行き詰まったときは、水のように迂回してみてください。", vi: "Đối mặt với bế tắc, hãy thử đi vòng như nước." },
+                relationship: { zh: "在溝通中退一步，不爭論誰對誰錯。", en: "Take a step back in communication.", ja: "コミュニケーションでは一歩引いてください。", vi: "Lùi một bước trong giao tiếp." },
+                growth: { zh: "允許自己適應各種環境的變化。", en: "Allow yourself to adapt to changes.", ja: "環境の変化に適応することを自分に許可してください。", vi: "Cho phép bản thân thích nghi với những thay đổi." }
+            }
+        }];
+
         let cards = [];
         let currentCard = null; 
         let currentLang = localStorage.getItem('taoLang') || 'zh';
 
         window.onload = function() {
-            // ✨ 在載入時就為 body 加上語言標籤，讓 CSS 知道現在要套用哪種排版 ✨
             document.body.setAttribute('data-lang', currentLang);
             updateUI();
             
-            const cachedDB = localStorage.getItem('taoFullDatabase_v1');
-            if (cachedDB) {
+            // 讀取快取記憶體 (確保版本號乾淨)
+            const cachedDB = localStorage.getItem('taoFullDatabase_v3');
+            
+            if (cachedDB && JSON.parse(cachedDB).length > 0) {
+                // 有快取：0秒瞬間載入！
                 cards = JSON.parse(cachedDB);
                 startApp();
-                fetchDataFromCloud(false); 
+                // 背景靜默去 Google 更新資料，使用者不需等待
+                backgroundSync(); 
             } else {
-                document.getElementById('loading').style.display = 'block';
-                fetchDataFromCloud(true);
+                // 沒快取：先用急救包瞬間顯示，然後背景去抓資料
+                cards = defaultCards;
+                startApp();
+                backgroundSync(true); // true 代表是第一次，抓完會通知使用者
             }
         };
 
-        function fetchDataFromCloud(isFirstTime) {
+        // 核心：背景悄悄去 Google 下載資料
+        function backgroundSync(isFirstTime = false) {
             Papa.parse(csvUrl, {
                 download: true,
                 header: true, 
@@ -191,4 +207,231 @@
                         }
                     });
 
-                    i
+                    if(tempCards.length > 0) {
+                        // 更新記憶體，明天抽卡就會用到最新資料
+                        localStorage.setItem('taoFullDatabase_v3', JSON.stringify(tempCards));
+                        
+                        if (isFirstTime) {
+                            // 第一次來的話，跳個小提示告訴他資料庫建置完畢
+                            const toast = document.getElementById('sync-toast');
+                            toast.style.display = 'block';
+                            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.style.display = 'none', 500); }, 3000);
+                        }
+                    }
+                },
+                error: function(err) {
+                    console.log("背景更新失敗，將繼續使用快取", err);
+                }
+            });
+        }
+
+        // 確保發生錯誤時，卷軸一定會打開
+        function forceUnrollAndShowError(msg) {
+            const paper = document.getElementById('main-paper');
+            const wrapperEl = document.getElementById('quote-wrapper');
+            paper.classList.add('unroll-animation');
+            document.getElementById('card-chapter').innerHTML = "⚠️ 系統提示";
+            document.getElementById('card-quote').innerHTML = msg;
+            wrapperEl.style.opacity = 1; 
+        }
+
+        function startApp() {
+            document.getElementById('card-explanation').style.display = 'block';
+            document.getElementById('btn-group').style.display = 'flex';
+            document.getElementById('notice-text').style.display = 'block';
+
+            const today = new Date().toLocaleDateString('zh-TW');
+            const lastDrawDate = localStorage.getItem('taoLastDrawDate_v4');
+            const savedCardString = localStorage.getItem('taoTodayCard_v4');
+
+            if (lastDrawDate === today && savedCardString) {
+                currentCard = JSON.parse(savedCardString);
+            } else {
+                const randomIndex = Math.floor(Math.random() * cards.length);
+                currentCard = cards[randomIndex];
+                localStorage.setItem('taoLastDrawDate_v4', today);
+                localStorage.setItem('taoTodayCard_v4', JSON.stringify(currentCard));
+                saveToHistory(today, currentCard);
+            }
+            renderCard();
+        }
+
+        function renderCard() {
+            const img = new Image();
+            img.src = currentCard.bgImg;
+            img.onload = () => { document.body.style.backgroundImage = `url('${currentCard.bgImg}')`; };
+
+            const paper = document.getElementById('main-paper');
+            const wrapperEl = document.getElementById('quote-wrapper');
+            const utilityBar = document.getElementById('utility-bar');
+            
+            paper.classList.remove('unroll-animation');
+            wrapperEl.classList.remove('fade-in-text');
+            utilityBar.classList.remove('fade-in-text');
+            void paper.offsetWidth; 
+            
+            paper.classList.add('unroll-animation');
+            
+            document.getElementById('card-chapter').innerHTML = currentCard.chapter;
+            document.getElementById('card-quote').innerHTML = currentCard.quote[currentLang] || currentCard.quote['zh'];
+            
+            const expTitle = `<span style="font-weight:bold; color:#9e2a2b;">【${uiText[currentLang].exp}】</span><br>`;
+            const expContent = currentCard.explanation[currentLang] || currentCard.explanation['zh'];
+            document.getElementById('card-explanation').innerHTML = expTitle + expContent;
+            
+            wrapperEl.classList.add('fade-in-text');
+            utilityBar.classList.add('fade-in-text');
+
+            checkSaveStatus(); 
+        }
+
+        function changeLanguage() {
+            currentLang = document.getElementById('lang-select').value;
+            localStorage.setItem('taoLang', currentLang); 
+            document.body.setAttribute('data-lang', currentLang);
+            
+            updateUI();
+            document.getElementById('card-quote').innerHTML = currentCard.quote[currentLang] || currentCard.quote['zh'];
+            
+            const expTitle = `<span style="font-weight:bold; color:#9e2a2b;">【${uiText[currentLang].exp}】</span><br>`;
+            const expContent = currentCard.explanation[currentLang] || currentCard.explanation['zh'];
+            document.getElementById('card-explanation').innerHTML = expTitle + expContent;
+            
+            document.getElementById('advice-box').style.display = 'none';
+        }
+
+        function updateUI() {
+            document.getElementById('lang-select').value = currentLang;
+            document.getElementById('btn-work').innerText = uiText[currentLang].work;
+            document.getElementById('btn-rel').innerText = uiText[currentLang].rel;
+            document.getElementById('btn-growth').innerText = uiText[currentLang].growth;
+            document.getElementById('nav-collection').innerText = uiText[currentLang].collection;
+            document.getElementById('nav-history').innerText = uiText[currentLang].history;
+            document.getElementById('save-btn').innerText = uiText[currentLang].save;
+            document.getElementById('img-btn').innerText = uiText[currentLang].download;
+            document.getElementById('share-btn').innerText = uiText[currentLang].share;
+            document.getElementById('notice-text').innerText = uiText[currentLang].notice;
+            document.getElementById('collection-title').innerText = uiText[currentLang].collectionTitle;
+            document.getElementById('history-title').innerText = uiText[currentLang].historyTitle;
+            checkSaveStatus();
+        }
+
+        function showAdvice(type) {
+            const adviceBox = document.getElementById('advice-box');
+            adviceBox.classList.remove('fade-in-text');
+            void adviceBox.offsetWidth;
+            
+            let adviceContent = "";
+            if (type === 'work') adviceContent = currentCard.advice.work[currentLang] || currentCard.advice.work['zh'];
+            else if (type === 'relationship') adviceContent = currentCard.advice.relationship[currentLang] || currentCard.advice.relationship['zh'];
+            else if (type === 'growth') adviceContent = currentCard.advice.growth[currentLang] || currentCard.advice.growth['zh'];
+            
+            let adviceTitle = "";
+            if (type === 'work') adviceTitle = uiText[currentLang].workGuide;
+            else if (type === 'relationship') adviceTitle = uiText[currentLang].relGuide;
+            else if (type === 'growth') adviceTitle = uiText[currentLang].growthGuide;
+
+            adviceBox.innerHTML = `<span style="font-weight:bold; color:#9e2a2b;">【${adviceTitle}】</span>\n` + adviceContent;
+            adviceBox.style.display = 'block';
+            adviceBox.classList.add('fade-in-text');
+        }
+
+        function getCollection() { return JSON.parse(localStorage.getItem('taoCollection')) ||[]; }
+
+        function checkSaveStatus() {
+            const collection = getCollection();
+            const saveBtn = document.getElementById('save-btn');
+            const isSaved = collection.some(item => item.id === currentCard.quote['zh']);
+            if (isSaved) {
+                saveBtn.innerText = currentLang === 'zh' ? "✓ 已典藏" : (currentLang === 'en' ? "✓ Saved" : (currentLang === 'ja' ? "✓ 保存済" : "✓ Đã lưu"));
+                saveBtn.classList.add('saved');
+            } else {
+                saveBtn.innerText = uiText[currentLang].save;
+                saveBtn.classList.remove('saved');
+            }
+        }
+
+        function toggleSave() {
+            let collection = getCollection();
+            const isSaved = collection.some(item => item.id === currentCard.quote['zh']);
+            if (isSaved) {
+                collection = collection.filter(item => item.id !== currentCard.quote['zh']);
+            } else {
+                collection.push({ id: currentCard.quote['zh'], chapter: currentCard.chapter, quote: currentCard.quote, explanation: currentCard.explanation });
+            }
+            localStorage.setItem('taoCollection', JSON.stringify(collection));
+            checkSaveStatus();
+        }
+
+        function openCollection() {
+            const modal = document.getElementById('collectionModal');
+            const list = document.getElementById('collection-list');
+            const collection = getCollection();
+            list.innerHTML = '';
+            if (collection.length === 0) {
+                list.innerHTML = `<p style="color:#888;">${uiText[currentLang].empty}</p>`;
+            } else {
+                collection.forEach((item, index) => {
+                    const quoteText = item.quote[currentLang] || item.quote['zh'];
+                    const expText = item.explanation[currentLang] || item.explanation['zh'];
+                    list.innerHTML += `<div class="collection-item"><div class="collection-chapter">${item.chapter}</div><div class="collection-quote">${quoteText}</div><div class="explanation-text" style="background:none; padding:0;"><span style="font-weight:bold; color:#9e2a2b;">【${uiText[currentLang].exp}】</span><br>${expText}</div><button class="remove-btn" onclick="removeCollection(${index})">${uiText[currentLang].remove}</button></div>`;
+                });
+            }
+            modal.style.display = 'block';
+        }
+
+        function removeCollection(index) {
+            let collection = getCollection(); collection.splice(index, 1); localStorage.setItem('taoCollection', JSON.stringify(collection)); openCollection(); checkSaveStatus(); 
+        }
+
+        function closeCollection() { document.getElementById('collectionModal').style.display = 'none'; }
+
+        function saveToHistory(date, cardData) {
+            let history = JSON.parse(localStorage.getItem('taoHistory_v3')) || [];
+            if (history.length > 0 && history[0].date === date) return; 
+            history.unshift({ date: date, chapter: cardData.chapter, quote: cardData.quote });
+            if (history.length > 7) history.pop(); 
+            localStorage.setItem('taoHistory_v3', JSON.stringify(history));
+        }
+
+        function openHistory() {
+            const modal = document.getElementById('historyModal');
+            const list = document.getElementById('history-list');
+            const history = JSON.parse(localStorage.getItem('taoHistory_v3')) || [];
+            list.innerHTML = '';
+            if (history.length === 0) list.innerHTML = `<p style="color:#888;">${uiText[currentLang].historyEmpty}</p>`;
+            else { history.forEach((item) => { const quoteText = item.quote[currentLang] || item.quote['zh']; list.innerHTML += `<div class="collection-item"><div class="collection-chapter" style="color:#9e2a2b; font-weight:bold; font-size:1rem; margin-bottom:8px;">${item.date}</div><div class="collection-chapter">${item.chapter}</div><div class="collection-quote">${quoteText}</div></div>`; }); }
+            modal.style.display = 'block';
+        }
+
+        function closeHistory() { document.getElementById('historyModal').style.display = 'none'; }
+
+        function downloadImage() {
+            const paper = document.getElementById('main-paper'); const watermark = document.getElementById('watermark'); const utilityBar = document.getElementById('utility-bar'); const btnGroup = document.getElementById('btn-group'); const wrapperEl = document.getElementById('quote-wrapper'); const adviceBox = document.getElementById('advice-box');
+            watermark.style.display = 'block'; utilityBar.style.display = 'none'; btnGroup.style.display = 'none';
+            const originalBoxShadow = paper.style.boxShadow; const originalBgImage = paper.style.backgroundImage;
+            paper.style.animation = 'none'; paper.style.opacity = '1'; paper.style.boxShadow = 'none'; paper.style.background = '#fdf5e6'; paper.style.maxHeight = 'none'; paper.style.padding = '40px 30px';
+            wrapperEl.style.animation = 'none'; wrapperEl.style.opacity = '1';
+            if (adviceBox.style.display === 'block') { adviceBox.style.animation = 'none'; adviceBox.style.opacity = '1'; }
+
+            setTimeout(() => {
+                html2canvas(paper, { backgroundColor: "#fdf5e6", scale: 2, useCORS: true }).then(canvas => {
+                    const link = document.createElement('a'); link.download = '道德經禪意畫卷.png'; link.href = canvas.toDataURL('image/png'); link.click();
+                    paper.style.animation = ''; paper.style.opacity = ''; paper.style.boxShadow = originalBoxShadow; paper.style.backgroundImage = originalBgImage; paper.style.background = '';
+                    wrapperEl.style.animation = ''; wrapperEl.style.opacity = ''; if (adviceBox.style.display === 'block') { adviceBox.style.animation = ''; adviceBox.style.opacity = ''; }
+                    watermark.style.display = 'none'; utilityBar.style.display = 'flex'; btnGroup.style.display = 'flex'; 
+                });
+            }, 300); 
+        }
+
+        function shareText() {
+            const rawQuote = currentCard.quote[currentLang] || currentCard.quote['zh'];
+            const cleanQuote = rawQuote.replace(/<br>/g, '\n').replace(/　　/g, '  ');
+            const expText = currentCard.explanation[currentLang] || currentCard.explanation['zh'];
+            const shareData = { title: '道德經禪意指引', text: `${currentCard.chapter}\n\n${cleanQuote}\n\n【${uiText[currentLang].exp}】\n${expText}\n\n— 來自 道德經禪意指引`, };
+            if (navigator.share) navigator.share(shareData).catch(err => console.log('分享取消或失敗', err));
+            else alert("此裝置不支援快速分享，但您可以透過『拓印畫卷』下載圖片傳給朋友！");
+        }
+    </script>
+</body>
+</html>
